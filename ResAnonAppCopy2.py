@@ -3,6 +3,10 @@ import spacy
 import docx
 from io import BytesIO
 import re  # Regular expression library
+from pdf2docx import Converter
+
+def convert_pdf_to_docx(input_pdf_stream):
+    # [Function body remains unchanged]
 
 def anonymize_document(uploaded_file):
     try:
@@ -11,9 +15,17 @@ def anonymize_document(uploaded_file):
 
         # Regular expression pattern for detecting emails
         email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        
+        # Regular expression pattern for detecting phone numbers
+        phone_pattern = r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
 
-        # Read the document
-        doc = docx.Document(BytesIO(uploaded_file.getvalue()))
+        # Check if file is PDF and convert to DOCX if necessary
+        if uploaded_file.name.endswith('.pdf'):
+            converted_docx_stream = convert_pdf_to_docx(uploaded_file)
+            doc = docx.Document(converted_docx_stream)
+        else:
+            doc = docx.Document(BytesIO(uploaded_file.getvalue()))
+        
         anonymized_doc = docx.Document()
 
         for para in doc.paragraphs:
@@ -21,6 +33,9 @@ def anonymize_document(uploaded_file):
             
             # Remove email addresses
             anonymized_text = re.sub(email_pattern, "[EMAIL REMOVED]", anonymized_text)
+
+            # Remove phone numbers
+            anonymized_text = re.sub(phone_pattern, "[PHONE NUMBER REMOVED]", anonymized_text)
 
             processed_text = nlp(anonymized_text)
             for entity in processed_text.ents:
@@ -48,6 +63,6 @@ def anonymize_document(uploaded_file):
 st.title("Resume Anonymizer")
 
 # File uploader
-uploaded_file = st.file_uploader("Upload a resume", type=["docx"])
+uploaded_file = st.file_uploader("Upload a resume", type=["docx", "pdf"])
 if uploaded_file is not None:
     anonymize_document(uploaded_file)
