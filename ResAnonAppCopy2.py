@@ -6,7 +6,11 @@ import re  # Regular expression library
 from pdf2docx import Converter
 
 def convert_pdf_to_docx(input_pdf_stream):
-    # [Function body remains unchanged]
+    output_docx_stream = BytesIO()
+    with Converter(input_pdf_stream) as converter:
+        converter.convert(output_docx_stream)
+    output_docx_stream.seek(0)
+    return output_docx_stream
 
 def anonymize_document(uploaded_file):
     try:
